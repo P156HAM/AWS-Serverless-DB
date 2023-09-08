@@ -1,0 +1,64 @@
+service: serverless-test
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: Skola-test
+  region: eu-north-1
+  iam:
+    role: arn:aws:iam::836221056428:role/Lambda-Role
+
+plugins:
+  - serverless-webpack
+
+package:
+  individually: true
+
+functions:
+  insertEventsInDb:
+    handler: functions/insertEventsInDb/index.handler
+  getEvent:
+    handler: functions/getEvent/index.handler
+    events: 
+      - httpApi:
+          path: '/api/event'
+          method: GET 
+  orderTicket:
+    handler: functions/orderTicket/index.handler
+    events: 
+      - httpApi:
+          path: '/api/event'
+          method: POST 
+  verifyTicket:
+    handler: functions/verifyTicket/index.handler
+    events: 
+      - httpApi:
+          path: '/api/event/{ticketId}'
+          method: GET 
+
+resources:
+  Resources:
+    eventsDb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: events-db
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    ticketsDb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tickets-db
+        AttributeDefinitions:
+          - AttributeName: ticketId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ticketId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
